@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valentine's Proposal</title>
+    <title>Will You Be My Valentine?</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600;700&family=Caveat:wght@600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -14,37 +20,66 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
             background: linear-gradient(45deg, #ff8db3, #ff5c8f, #ff85b2, #ff61a6);
-            background-size: 300% 300%;
-            animation: gradientBG 15s ease infinite;
+            background-size: 400% 400%;
+            animation: backgroundFlow 20s ease infinite;
+            perspective: 1000px;
             overflow: hidden;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50% }
-            50% { background-position: 100% 50% }
-            100% { background-position: 0% 50% }
+        @keyframes backgroundFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .background-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 30px;
+            opacity: 0;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .love-particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .floating-curve {
+            position: absolute;
+            width: 200px;
+            height: 2px;
+            background: rgba(255,255,255,0.2);
+            opacity: 0;
+            filter: blur(1px);
         }
 
         .container {
-            text-align: center;
-            padding: 40px 60px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 30px;
             position: relative;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            border: 8px solid #ff61a6;
-            max-width: 600px;
-            width: 90%;
-            transform-style: preserve-3d;
-            perspective: 1000px;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0); }
-            50% { transform: translateY(-20px) rotate(2deg); }
+            z-index: 10;
+            text-align: center;
+            padding: 50px 70px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            border: 10px solid #ff61a6;
+            max-width: 700px;
+            width: 95%;
         }
 
         h1 {
@@ -163,6 +198,7 @@
     </style>
 </head>
 <body>
+    <div class="background-layer"></div>
     <div class="hearts"></div>
     <div class="container animate__animated animate__bounceIn">
         <h1>Will you be my Valentine? 🌹</h1>
@@ -175,27 +211,16 @@
     <div class="confetti"></div>
 
     <script>
-        // Create floating hearts
-        function createHearts() {
-            const heartsContainer = document.querySelector('.hearts');
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.className = 'heart';
-                heart.innerHTML = '❤️';
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.animationDuration = Math.random() * 2 + 3 + 's';
-                heartsContainer.appendChild(heart);
-                setTimeout(() => heart.remove(), 4000);
-            }, 300);
-        }
-
-        createHearts();
-
         // Handle response
         function handleResponse(answer) {
             const responseDiv = document.getElementById('response');
             const container = document.querySelector('.container');
+            const btnContainer = document.querySelector('.btn-container');
+            
+            // Remove both buttons after one is clicked
+            btnContainer.style.display = 'none';
 
+            // Display the appropriate response
             if (answer === 'yes') {
                 responseDiv.innerHTML = "Yay! You've made me the happiest person! 💜";
                 responseDiv.style.color = '#ff4b8d';
@@ -243,12 +268,12 @@
 
         // Function to send response to Netlify backend
         function sendResponseToServer(answer) {
-            fetch('/.netlify/functions/response', {  // Ensure the Netlify function is correctly set up
+            fetch('/.netlify/functions/response', {  
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ response: answer })  // Send the answer to the backend
+                body: JSON.stringify({ response: answer })  
             })
             .then(response => response.json())
             .then(data => {
@@ -257,6 +282,123 @@
             .catch(error => {
                 console.error('Error:', error);
             });
+        }
+
+        // Initialize background animations
+        window.onload = () => {
+            createFloatingHearts();
+            createLoveParticles();
+            createFloatingCurves();
+        };
+
+        // Floating hearts creation
+        function createFloatingHearts() {
+            const backgroundLayer = document.querySelector('.background-layer');
+            const heartEmojis = ['❤️', '💖', '💕', '💗', '💓','💜',];
+
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.classList.add('floating-heart');
+                heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.top = '-50px';
+                heart.style.animationDuration = (Math.random() * 10 + 5) + 's';
+
+                const floatAnimation = [
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 0 },
+                    { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 1 }
+                ];
+
+                const animation = heart.animate(floatAnimation, {
+                    duration: 10000,
+                    easing: 'cubic-bezier(0.5, 0.1, 0.3, 0.9)',
+                    fill: 'forwards'
+                });
+
+                backgroundLayer.appendChild(heart);
+
+                animation.onfinish = () => {
+                    heart.remove();
+                };
+            }, 500);
+        }
+
+        // Love particle effects
+        function createLoveParticles() {
+            const backgroundLayer = document.querySelector('.background-layer');
+
+            setInterval(() => {
+                const particle = document.createElement('div');
+                particle.classList.add('love-particle');
+                
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.top = '-50px';
+
+                const floatAnimation = [
+                    { 
+                        transform: 'translateY(0) translateX(0) scale(1)', 
+                        opacity: 0.7,
+                        backgroundColor: 'rgba(255,255,255,0.6)'
+                    },
+                    { 
+                        transform: `translateY(100vh) translateX(${Math.random() * 200 - 100}px) scale(0.5)`, 
+                        opacity: 0,
+                        backgroundColor: 'rgba(255,255,255,0)'
+                    }
+                ];
+
+                const animation = particle.animate(floatAnimation, {
+                    duration: 8000,
+                    easing: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+                    fill: 'forwards'
+                });
+
+                backgroundLayer.appendChild(particle);
+
+                animation.onfinish = () => {
+                    particle.remove();
+                };
+            }, 100);
+        }
+
+        // Floating curve effects
+        function createFloatingCurves() {
+            const backgroundLayer = document.querySelector('.background-layer');
+
+            setInterval(() => {
+                const curve = document.createElement('div');
+                curve.classList.add('floating-curve');
+                
+                curve.style.left = Math.random() * 100 + 'vw';
+                curve.style.top = '-50px';
+                curve.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+                const floatAnimation = [
+                    { 
+                        transform: 'translateY(0) rotate(45deg)', 
+                        opacity: 0.3,
+                        width: '200px'
+                    },
+                    { 
+                        transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, 
+                        opacity: 0,
+                        width: '50px'
+                    }
+                ];
+
+                const animation = curve.animate(floatAnimation, {
+                    duration: 10000,
+                    easing: 'linear',
+                    fill: 'forwards'
+                });
+
+                backgroundLayer.appendChild(curve);
+
+                animation.onfinish = () => {
+                    curve.remove();
+                };
+            }, 1000);
         }
     </script>
 </body>
