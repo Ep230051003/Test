@@ -208,6 +208,9 @@
 
             responseDiv.style.opacity = '1';
             responseDiv.classList.add('animate__animated', 'animate__fadeInUp');
+
+            // Send the response to the Netlify backend
+            sendResponseToServer(answer);
         }
 
         // Create confetti effect
@@ -236,23 +239,24 @@
                 confettiContainer.appendChild(confetti);
                 setTimeout(() => confetti.remove(), 5000);
             }
-function sendResponseToServer(answer) {
-    fetch('/.netlify/functions/response', {  // Updated to point to the Netlify function
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ response: answer })  // Send the answer to the backend
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Response from server:', data);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-            });
         }
 
+        // Function to send response to Netlify backend
+        function sendResponseToServer(answer) {
+            fetch('/.netlify/functions/response', {  // Ensure the Netlify function is correctly set up
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ response: answer })  // Send the answer to the backend
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response from server:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
     </script>
 </body>
